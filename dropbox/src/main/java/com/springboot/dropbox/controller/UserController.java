@@ -14,6 +14,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+
+import javax.servlet.http.HttpSession;
+
 @RestController
 @CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/user")
@@ -28,7 +31,6 @@ public class UserController {
 
     @Autowired
     private UserRepository userRepository;
-
 
 
     private ResponseEntity<?> returnSuccessResponseEntity(JSONObject resSuccess) {
@@ -83,7 +85,8 @@ public class UserController {
     /******************************************** User SignIn *******************************************/
 
     @PostMapping(path="/signin",consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> signIn(@RequestBody User user)
+
+    public ResponseEntity<?> signIn(@RequestBody User user,HttpSession session)
     {
         User existingUser = userService.signIn(user);
         if(existingUser==null)
@@ -93,9 +96,25 @@ public class UserController {
             return returnErrorResponseEntity(message);
         }
 
+        session.setAttribute("emailID",user.getEmailID());
+        session.setAttribute("isLoggedIn",true);
         JSONObject resJSON = new JSONObject(existingUser);
         return returnSuccessResponseEntity(resJSON);
 
+    }
+
+
+    /******************************************** User SignOut *******************************************/
+
+    @PostMapping(value = "/signout")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public ResponseEntity<?> signout(HttpSession session) {
+        System.out.println(session.getAttribute("emailID"));
+        session.setAttribute("isLoggedIn",false);
+        session.invalidate();
+        JSONObject resJson = new JSONObject();
+        resJson.put("message","User successfully sign out");
+        return returnSuccessResponseEntity(resJson);
     }
 
 }

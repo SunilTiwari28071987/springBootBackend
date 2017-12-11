@@ -63,7 +63,6 @@ public class FileService {
          }
     }
 
-
     public File share(String filePath, String emailID) {
 
         User user = userRepository.findByEmailID(emailID);
@@ -78,11 +77,13 @@ public class FileService {
     public File star(String filePath) {
 
         System.out.println(filePath);
+
         File fileStarred = fileRepository.findByFilePath(filePath);
         fileStarred.setIsStared(true);
         fileRepository.save(fileStarred);
         return fileStarred;
     }
+
 
     public File unstar(String filePath) {
 
@@ -100,4 +101,5 @@ public class FileService {
         userRepository.save(user);
         return fileToBeDeleted;
     }
+
 }

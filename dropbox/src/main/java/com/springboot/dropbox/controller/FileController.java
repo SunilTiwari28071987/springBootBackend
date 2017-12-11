@@ -12,6 +12,9 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -20,6 +23,14 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.apache.tika.Tika;
+import org.apache.tika.mime.MimeTypes;
+
+import java.io.IOException;
+import java.net.URLConnection;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Controller
 @CrossOrigin(origins = "http://localhost:3000")
@@ -34,6 +45,8 @@ public class FileController {
 
     @Autowired
     private FileRepository fileRepository;
+
+    //String currentWorkingDirectory = System.getProperty("user.dir")+System.getProperty("file.separator");
 
 
 
@@ -62,6 +75,9 @@ public class FileController {
     }
 
 
+    /******************************************** File Upload *******************************************/
+
+
     @PostMapping(path="/upload")
     public ResponseEntity<?> fileUpload(@RequestParam("file") MultipartFile multiPartFile, @RequestParam("emailID") String emailID,
                                         @RequestParam("fileName") String fileName) {
@@ -70,6 +86,7 @@ public class FileController {
         System.out.println("database processing for uploading completed");
         if(file!=null)
         {
+
             String currentWorkingDirectory = System.getProperty("user.dir")+System.getProperty("file.separator");
             JSONObject resJSON = new JSONObject(file);
             resJSON.put("filePath", currentWorkingDirectory+"src/main/resources/upload/"+fileName);
@@ -134,6 +151,7 @@ public class FileController {
 
     }
 
+
     /******************************************** File Unstar *******************************************/
 
     @PostMapping(path="/unstar")
@@ -181,4 +199,38 @@ public class FileController {
         }
 
     }
+
+
+    /******************************************** File Download *******************************************/
+
+
+    @RequestMapping(path = "/download/{fileName:.+}", method = RequestMethod.GET)
+    public ResponseEntity<Resource> download(String param,@PathVariable("fileName") String fileName) throws IOException {
+        System.out.println("\n********** Download File : ************\n");
+
+        Tika tika = new Tika();
+        String currentWorkingDirectory = System.getProperty("user.dir")+System.getProperty("file.separator");
+        java.io.File file = new java.io.File(currentWorkingDirectory+"src/main/resources/upload/"+fileName);
+        Path path = Paths.get(file.getAbsolutePath());
+        ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
+        HttpHeaders headers = new HttpHeaders();
+
+//        String mimeType= URLConnection.guessContentTypeFromName(file.getName());
+//        if(mimeType==null){
+//            mimeType = "application/octet-stream";
+//        }
+//
+//        System.out.println("mimetype : "+mimeType);
+//        System.out.println("tika mimetype : "+tika.detect(file));
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentLength(file.length())
+                .contentType(MediaType.parseMediaType(tika.detect(file)))
+                .body(resource);
+    }
+
+
+
 }
+
