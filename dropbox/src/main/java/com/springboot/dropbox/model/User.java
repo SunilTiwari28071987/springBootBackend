@@ -21,6 +21,17 @@ public class User {
 
     private String password;
 
+    public User() {
+    }
+
+    public User(String firstName, String lastName, String emailID, String password, List<File> files) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.emailID = emailID;
+        this.password = password;
+        this.files = files;
+    }
+
     @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "UserAccess", joinColumns = @JoinColumn(name = "emailID"), inverseJoinColumns = @JoinColumn(name = "filePath"))
     private List<File> files;
